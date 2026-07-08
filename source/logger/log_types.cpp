@@ -23,6 +23,12 @@ void Logger::log(std::string message)
     send_to_logger(message, LogLevel::LOG);
 }
 
+void Logger::info(std::string message)
+{
+    message = "[+] " + get_prefix() + " " + message;
+    send_to_logger(message, LogLevel::INFO);
+}
+
 void Logger::warn(std::string message)
 {
     message = "[!] " + get_prefix() + " " + message;

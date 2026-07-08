@@ -37,6 +37,7 @@ public:
     Logger(const logging log_target);
 
     void log(std::string message);
+    void info(std::string message);
     void warn(std::string message);
     void critical(std::string message);
     void error(std::string message);
