@@ -6,8 +6,49 @@ find_package(PkgConfig REQUIRED)
 
 project(app)
 
-file(GLOB_RECURSE APP_SRC "source/*.cpp")
+
+# math
+
+file(GLOB_RECURSE MATH_SRC
+    CONFIGURE_DEPENDS
+    source/math/*.cpp
+)
+
+add_library(math STATIC ${MATH_SRC})
+
+target_include_directories(math
+    PUBLIC
+        include
+)
+
+# model
+
+file(GLOB_RECURSE MODEL_SRC
+    CONFIGURE_DEPENDS
+    source/model/*.cpp
+)
+
+add_library(model STATIC ${MODEL_SRC})
+
+target_include_directories(model
+    PUBLIC
+        math
+        include
+)
+
+
+# app
+
+file(GLOB_RECURSE APP_SRC
+    CONFIGURE_DEPENDS
+
+    source/app/*.cpp
+    source/config/*.cpp
+    source/logger/*.cpp
+)
+
 add_executable(bin ${APP_SRC})
+
 
 include_directories(bin PRIVATE
     include
@@ -15,6 +56,7 @@ include_directories(bin PRIVATE
 )
 
 target_link_libraries(bin
+    model
     TgBot
     pthread
     ssl
@@ -22,4 +64,8 @@ target_link_libraries(bin
     curl
     z
 )
+
+
+enable_testing()
+add_subdirectory(tests)
 

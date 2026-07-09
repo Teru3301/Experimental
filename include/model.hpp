@@ -14,14 +14,14 @@ class model
 {
 private:
     //  perception
-    perception::text text_perception;
+    perception::Text text_perception_;
 
     //  cognition
-    memory memory;
-    world_model brain;
+    memory memory_;
+    world_model brain_;
 
     //  expression
-    text_decoder t_decoder;
+    text_decoder t_decoder_;
 
 public:
     model();
@@ -30,7 +30,7 @@ public:
     void save();
     void create();
 
-    void sense_text(perception::input input);
+    void sense_text(perception::TextInput input);
 
 };
 
