@@ -18,9 +18,19 @@ Args parse_args(int argc, char* argv[])
         for (int i = 1; i < argc; i++)
         {
             std::string_view arg = argv[i];
-            if (arg == "-t" || arg == "--token") {
+            if (arg == "-t" || arg == "--token")
+            {
                 i++;
                 args.BOT_TOKEN = argv[i];
+                break;
+            }
+            if (arg == "--text_sensor_device")
+            {
+                i++;
+                arg = argv[i];
+                if (arg == "cpu" || arg == "CPU") args.text_sence = device::CPU;
+                if (arg == "gpu" || arg == "GPU") args.text_sence = device::GPU;
+                break;
             }
             else 
             {

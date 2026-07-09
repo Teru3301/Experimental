@@ -1,10 +1,10 @@
 
-#include "model/perception/text_encoder.hpp"
+#pragma once
 
+#include "model/perception/text.hpp"
 #include "model/cognition/memory.hpp"
 #include "model/cognition/world_model.hpp"
-
-#include "model/expression/text_decoder.hpp"
+#include "model/expression/text.hpp"
 
 
 namespace model
@@ -14,7 +14,7 @@ class model
 {
 private:
     //  perception
-    text_encoder t_encoder;
+    perception::text text_perception;
 
     //  cognition
     memory memory;
@@ -30,9 +30,10 @@ public:
     void save();
     void create();
 
-    void sense_text();
+    void sense_text(perception::input input);
 
 };
+
 
 }
 
