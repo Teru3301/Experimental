@@ -28,8 +28,8 @@ Args parse_args(int argc, char* argv[])
             {
                 i++;
                 arg = argv[i];
-                if (arg == "cpu" || arg == "CPU") args.text_sence = device::CPU;
-                if (arg == "gpu" || arg == "GPU") args.text_sence = device::GPU;
+                if (arg == "cpu" || arg == "CPU") args.text_sence = Device::CPU;
+                if (arg == "gpu" || arg == "GPU") args.text_sence = Device::GPU;
                 break;
             }
             else 

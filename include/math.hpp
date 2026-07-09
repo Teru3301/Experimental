@@ -1,44 +1,10 @@
 
 #pragma once
 
+#include "math/vector.hpp"
 #include <vector>
 #include <span>
 
-
-class Vector 
-{
-private:
-    std::vector<float> data_;
-
-public:
-    Vector();
-
-    explicit Vector(size_t size);
-
-    size_t size() const;
-
-    float& operator[](size_t index);
-    const float& operator[](size_t index) const;
-
-    Vector operator+(const Vector& other) const;
-    Vector operator-(const Vector& other) const;
-    Vector operator*(float scalar) const;
-
-    Vector& operator+=(const Vector& other);
-    Vector& operator-=(const Vector& other);
-    Vector& operator*=(float scalar);
-
-    friend Vector operator*(float scalar, const Vector& vector);
-
-    float dot(const Vector& other) const;
-    float sum() const;
-
-    float mean() const;
-    float norm() const;
-
-    void zero();
-
-};
 
 
 class Matrix

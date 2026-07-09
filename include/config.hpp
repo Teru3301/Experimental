@@ -4,7 +4,7 @@
 #include <string>
 
 
-enum class device 
+enum class Device 
 {
     CPU,
     GPU
@@ -14,7 +14,7 @@ enum class device
 struct Args 
 {
     std::string BOT_TOKEN;
-    device text_sence;
+    Device text_sence;
 };
 
 

@@ -86,7 +86,7 @@ public:
 class Text
 {
 private:
-    device executionDevice = device::CPU;
+    Device executionDevice = Device::CPU;
     std::vector<EncoderBlock> blocks;
 
     std::vector<uint32_t> tokenize(const TextInput& input);
