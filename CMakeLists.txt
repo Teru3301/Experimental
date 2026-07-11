@@ -62,7 +62,7 @@ target_include_directories(model
 
 file(GLOB_RECURSE APP_SRC
     CONFIGURE_DEPENDS
-    source/app/*.cpp
+    source/application/*.cpp
     source/config/*.cpp
     source/logger/*.cpp
 )
