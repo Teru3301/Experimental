@@ -12,10 +12,13 @@
 - OpenSSL
 - ZLib
 - Libcurl 
+- intel-oneapi-dpcpp
+- intel-oneapi-mkl
+- intel-oneapi-mkl-sycl
 
 ---
 
 ## О последнем обновлении
 
-Исправлен класс Vector под будущую реализацию VectorGPU
+В CmakeLists была включена библиотека для работы с GPU
 

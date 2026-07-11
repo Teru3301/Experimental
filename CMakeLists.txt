@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 4.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_C_COMPILER icx)
+set(CMAKE_CXX_COMPILER icpx)
 
 find_package(PkgConfig REQUIRED)
 
 project(app)
+
+find_package(IntelSYCL REQUIRED)
 
 
 # math
@@ -14,26 +18,43 @@ file(GLOB_RECURSE MATH_SRC
     source/math/*.cpp
 )
 
-add_library(math STATIC ${MATH_SRC})
+add_library(math 
+    STATIC
+    ${MATH_SRC}
+)
 
-target_include_directories(math
+target_include_directories(math 
     PUBLIC
-        include
+    include
+    ${SYCL_INCLUDE_DIR}
+)
+
+target_compile_definitions(math 
+    PUBLIC 
+    USE_SYCL
+)
+
+target_link_libraries(math 
+    PUBLIC
+    ${SYCL_LIBRARY}
 )
 
 # model
 
-file(GLOB_RECURSE MODEL_SRC
+file(GLOB_RECURSE MODEL_SRC 
     CONFIGURE_DEPENDS
     source/model/*.cpp
 )
 
-add_library(model STATIC ${MODEL_SRC})
+add_library(model 
+    STATIC 
+    ${MODEL_SRC}
+)
 
-target_include_directories(model
+target_include_directories(model 
     PUBLIC
-        math
-        include
+    math
+    include
 )
 
 
@@ -41,7 +62,6 @@ target_include_directories(model
 
 file(GLOB_RECURSE APP_SRC
     CONFIGURE_DEPENDS
-
     source/app/*.cpp
     source/config/*.cpp
     source/logger/*.cpp
@@ -50,7 +70,8 @@ file(GLOB_RECURSE APP_SRC
 add_executable(bin ${APP_SRC})
 
 
-include_directories(bin PRIVATE
+include_directories(bin 
+    PRIVATE
     include
     libs
 )
