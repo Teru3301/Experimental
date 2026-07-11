@@ -1,11 +1,11 @@
-
-#include "math.hpp"
+#include "math/vector.hpp"
 #include <stdexcept>
 
 
-
-std::unique_ptr<VectorImpl> Vector::create_impl(size_t size, Device device) {
-    switch (device) {
+std::unique_ptr<VectorImpl> Vector::create_impl(size_t size, Device device)
+{
+    switch (device) 
+    {
         case Device::CPU:
             return std::make_unique<VectorCPU>(size);
         case Device::GPU:
@@ -27,21 +27,21 @@ size_t Vector::size() const
 }
 
 
-float& Vector::operator[](size_t index)
+float Vector::at(size_t index) const
 {
     if (index >= size()) {
         throw std::out_of_range("Индекс выходит за пределы вектора");
     }
-    return impl_->element(index);
+    return impl_->get_element(index);
 }
-    
 
-const float& Vector::operator[](size_t index) const
+
+void Vector::set_at(size_t index, float value)
 {
     if (index >= size()) {
         throw std::out_of_range("Индекс выходит за пределы вектора");
     }
-    return impl_->element(index);
+    impl_->set_element(index, value);
 }
 
 

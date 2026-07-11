@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "config.hpp"
 #include <vector>
 #include <memory>
@@ -10,8 +12,8 @@ public:
     virtual ~VectorImpl() = default;
     
     virtual size_t size() const = 0;
-    virtual float& element(size_t index) = 0;
-    virtual const float& element(size_t index) const = 0;
+    virtual float get_element(size_t index) const = 0;
+    virtual void set_element(size_t index, float value) = 0;
     
     virtual void add(const VectorImpl& other, VectorImpl& result) const = 0;
     virtual void subtract(const VectorImpl& other, VectorImpl& result) const = 0;
@@ -37,8 +39,8 @@ public:
     
     size_t size() const override;
     
-    float& element(size_t index) override;
-    const float& element(size_t index) const override;
+    float get_element(size_t index) const override;
+    void set_element(size_t index, float value) override;
     
     void add(const VectorImpl& other, VectorImpl& result) const override;
     void subtract(const VectorImpl& other, VectorImpl& result) const override;
@@ -58,15 +60,21 @@ public:
 
 class VectorGPU : public VectorImpl {
 private:
-    std::vector<float> data_;
+    size_t size_;
+    float* data_;            // сырой указатель — имитация памяти устройства
 
 public:
     explicit VectorGPU(size_t size);
+    ~VectorGPU();
+    
+    // Запрет копирования (пока, чтобы не усложнять)
+    VectorGPU(const VectorGPU&) = delete;
+    VectorGPU& operator=(const VectorGPU&) = delete;
     
     size_t size() const override;
     
-    float& element(size_t index) override;
-    const float& element(size_t index) const override;
+    float get_element(size_t index) const override;
+    void set_element(size_t index, float value) override;
     
     void add(const VectorImpl& other, VectorImpl& result) const override;
     void subtract(const VectorImpl& other, VectorImpl& result) const override;
@@ -97,8 +105,8 @@ public:
 
     size_t size() const;
     
-    float& operator[](size_t index);
-    const float& operator[](size_t index) const;
+    float at(size_t index) const;
+    void set_at(size_t index, float value);
     
     Vector operator+(const Vector& other) const;
     Vector operator-(const Vector& other) const;
@@ -116,5 +124,4 @@ public:
 };
 
 Vector operator*(float scalar, const Vector& vector);
-
 

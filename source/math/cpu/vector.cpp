@@ -1,6 +1,7 @@
 
-#include "math.hpp"
+#include "math/vector.hpp"
 #include <cmath>
+#include <algorithm>
 
 
 
@@ -13,15 +14,15 @@ size_t VectorCPU::size() const
 }
 
 
-float& VectorCPU::element(size_t index)
+float VectorCPU::get_element(size_t index) const
 {
     return data_[index];
 }
 
 
-const float& VectorCPU::element(size_t index) const
+void VectorCPU::set_element(size_t index, float value)
 {
-    return data_[index];
+    data_[index] = value;
 }
 
 
