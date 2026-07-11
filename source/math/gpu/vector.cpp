@@ -2,6 +2,7 @@
 #include "math/vector.hpp"
 #include <cmath>
 #include <cstring>
+#include "device/queue.hpp"
 
 
 

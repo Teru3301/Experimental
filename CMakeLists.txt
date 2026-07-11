@@ -15,6 +15,7 @@ find_package(IntelSYCL REQUIRED)
 
 file(GLOB_RECURSE MATH_SRC
     CONFIGURE_DEPENDS
+    source/device/*.cpp
     source/math/*.cpp
 )
 
@@ -37,6 +38,7 @@ target_compile_definitions(math
 target_link_libraries(math 
     PUBLIC
     ${SYCL_LIBRARY}
+    ${MKL_LIBRARIES}
 )
 
 # model

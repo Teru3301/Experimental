@@ -141,3 +141,7 @@ local.properties
 *.crt
 secrets/
 
+.cache/
+cache/
+*.cache
+
