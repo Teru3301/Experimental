@@ -1,6 +1,9 @@
+#!/bin/bash
+
 cd ..
-mkdir build
+mkdir -p build
 cd build
-source /opt/intel/oneapi/setvars.sh
-cmake ..
+
+cmake .. -DCMAKE_CXX_COMPILER=acpp
 cmake --build .
+

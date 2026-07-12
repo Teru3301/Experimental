@@ -8,17 +8,14 @@
 ---
 
 ## Зависимости
+- C++20
 - CMake
-- OpenSSL
-- ZLib
-- Libcurl 
-- intel-oneapi-dpcpp
-- intel-oneapi-mkl
-- intel-oneapi-mkl-sycl
+- AdaptiveCpp (acpp)
+- GoogleTest
 
 ---
 
 ## О последнем обновлении
 
-В CmakeLists была включена библиотека для работы с GPU
+Vector теперь действительно вычисляется на GPU
 

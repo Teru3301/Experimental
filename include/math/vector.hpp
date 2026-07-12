@@ -61,7 +61,7 @@ public:
 class VectorGPU : public VectorImpl {
 private:
     size_t size_;
-    float* data_;            // сырой указатель — имитация памяти устройства
+    float* data_;
 
 public:
     explicit VectorGPU(size_t size);

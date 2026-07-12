@@ -1,5 +1,7 @@
+
 #include "math/vector.hpp"
 #include <stdexcept>
+
 
 
 std::unique_ptr<VectorImpl> Vector::create_impl(size_t size, Device device)
