@@ -6,7 +6,7 @@
 
 
 
-class TransformerBlock : public torch::nn::Module
+class TransformerEncoderBlock : public torch::nn::Module
 {
     torch::nn::MultiheadAttention attn_{nullptr};
     std::shared_ptr<Perceptron> ffn_{nullptr};
@@ -17,8 +17,7 @@ class TransformerBlock : public torch::nn::Module
     torch::Device device_{torch::kCPU};
 
 public:
-    TransformerBlock(int64_t d_model, int64_t nhead, std::vector<int64_t> ffn_sizes, double dropout = 0.1);
-    torch::Tensor forward(torch::Tensor x, torch::Tensor attn_mask = {});
+    TransformerEncoderBlock(int64_t d_model, int64_t nhead, std::vector<int64_t> ffn_sizes, double dropout = 0.1);
+    torch::Tensor forward(torch::Tensor x, torch::Tensor padding_mask = {});
     torch::Device device() const { return device_; }
 };
-

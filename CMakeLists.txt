@@ -4,11 +4,29 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(app)
 
+include(FetchContent)
 
-# app
+
+# libtorch
 
 set(CMAKE_PREFIX_PATH "/opt/libtorch")
 find_package(Torch REQUIRED)
+
+
+# sentencepiece
+
+FetchContent_Declare(
+    sentencepiece
+    GIT_REPOSITORY https://github.com/google/sentencepiece.git
+    GIT_TAG v0.2.1
+)
+set(SPM_ENABLE_SHARED OFF CACHE BOOL "" FORCE)
+set(SPM_ENABLE_TCMALLOC OFF CACHE BOOL "" FORCE)
+set(SPM_BUILD_TEST OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(sentencepiece)
+
+
+# app
 
 find_package(PkgConfig REQUIRED)
 file(GLOB_RECURSE APP_SRC
@@ -21,12 +39,13 @@ add_executable(bin ${APP_SRC})
 target_include_directories(bin 
     PRIVATE 
     "${TORCH_INCLUDE_DIRS}"
+    "${sentencepiece_SOURCE_DIR}/src"
     include 
-    libs
 )
 target_link_libraries(bin
     PRIVATE
     "${TORCH_LIBRARIES}"
+    sentencepiece
 )
 
 add_custom_command(TARGET bin POST_BUILD
