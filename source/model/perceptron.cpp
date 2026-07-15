@@ -2,7 +2,6 @@
 #include "model/perceptron.hpp"
 
 
-
 Perceptron::Perceptron(std::vector<int64_t> sizes)
 {
     device_ = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
@@ -12,25 +11,39 @@ Perceptron::Perceptron(std::vector<int64_t> sizes)
         layers_->push_back(torch::nn::Linear(sizes[i], sizes[i + 1]));
         if (i < sizes.size() - 2) layers_->push_back(torch::nn::ReLU());
     }
+    
+    // Регистрируем ДО перемещения на устройство
     register_module("layers", layers_);
-    to(device_);
+    // Перемещаем ВСЁ на GPU сразу после регистрации
+    this->to(device_);
 }
 
 
 torch::Tensor Perceptron::forward(torch::Tensor x)
 {
-    return layers_->forward(x.to(device_));
+    // Проверяем, что тензор на правильном устройстве
+    if (x.device() != device_) {
+        x = x.to(device_);
+    }
+    return layers_->forward(x);
 }
 
 
 void Perceptron::fit(torch::Tensor inputs, torch::Tensor targets, int epochs, int batch, double lr)
 {
+    // Перемещаем данные на GPU один раз
     inputs = inputs.to(device_);
     targets = targets.to(device_);
 
-    auto opt = torch::optim::Adam(parameters(), lr);
+    // Оптимизатор и функция потерь автоматически будут на GPU,
+    // так как parameters() уже на GPU
+    auto opt = torch::optim::Adam(this->parameters(), lr);
     auto loss_fn = torch::nn::CrossEntropyLoss();
-    train();
+    
+    // Перемещаем loss function на GPU
+    loss_fn->to(device_);
+    
+    this->train();
 
     for (int e = 0; e < epochs; ++e) {
         float loss_sum = 0;
@@ -43,7 +56,9 @@ void Perceptron::fit(torch::Tensor inputs, torch::Tensor targets, int epochs, in
             auto y = targets.index_select(0, idx.slice(0, i, end));
 
             opt.zero_grad();
-            auto loss = loss_fn(forward(x), y);
+            // x и y уже на GPU, forward возвращает на GPU
+            auto output = this->forward(x);
+            auto loss = loss_fn->forward(output, y);
             loss.backward();
             opt.step();
 
@@ -57,8 +72,16 @@ void Perceptron::fit(torch::Tensor inputs, torch::Tensor targets, int epochs, in
 
 torch::Tensor Perceptron::predict(torch::Tensor x)
 {
-    eval();
+    this->eval();
     torch::NoGradGuard g;
-    return forward(x).argmax(1).cpu();
+    
+    // Перемещаем вход на GPU если нужно
+    if (x.device() != device_) {
+        x = x.to(device_);
+    }
+    
+    // ВСЕ вычисления на GPU, НЕ переносим на CPU!
+    auto output = this->forward(x);
+    return output.argmax(1); // Оставляем на GPU
 }
 
