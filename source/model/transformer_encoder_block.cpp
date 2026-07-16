@@ -4,12 +4,16 @@
 
 
 TransformerEncoderBlock::TransformerEncoderBlock(int64_t d_model, int64_t nhead, std::vector<int64_t> ffn_sizes, double dropout)
+    : d_model_(d_model)
+    , nhead_(nhead)
+    , head_dim_(d_model / nhead)
 {
     device_ = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
 
-    attn_ = register_module("attn", torch::nn::MultiheadAttention(
-        torch::nn::MultiheadAttentionOptions(d_model, nhead)
-            .dropout(dropout)));
+    q_proj_ = register_module("q_proj", torch::nn::Linear(d_model, d_model));
+    k_proj_ = register_module("k_proj", torch::nn::Linear(d_model, d_model));
+    v_proj_ = register_module("v_proj", torch::nn::Linear(d_model, d_model));
+    o_proj_ = register_module("o_proj", torch::nn::Linear(d_model, d_model));
 
     norm1_ = register_module("norm1", torch::nn::LayerNorm(
         torch::nn::LayerNormOptions({d_model})));
@@ -28,40 +32,53 @@ TransformerEncoderBlock::TransformerEncoderBlock(int64_t d_model, int64_t nhead,
     
     ffn_ = register_module("ffn", std::make_shared<Perceptron>(full_ffn));
 
-    // Перемещаем всё на GPU
     this->to(device_);
 }
 
 
 torch::Tensor TransformerEncoderBlock::forward(torch::Tensor x, torch::Tensor padding_mask)
 {
-    // Проверяем, что вход на правильном устройстве
     if (x.device() != device_) {
         x = x.to(device_);
     }
     
-    // Если маска задана и на другом устройстве - перемещаем
     if (padding_mask.defined() && padding_mask.device() != device_) {
         padding_mask = padding_mask.to(device_);
     }
 
     // Pre-LN: Self-Attention
-    // Вход: (batch, seq, features) -> транспонируем в (seq, batch, features)
     torch::Tensor residual = x;
     torch::Tensor x_norm = norm1_->forward(x);
-    x_norm = x_norm.transpose(0, 1);
     
-    // MultiheadAttention forward:
-    // forward(query, key, value, key_padding_mask, need_weights, attn_mask, average_attn_weights)
-    auto attn_result = attn_->forward(x_norm, x_norm, x_norm, padding_mask);
-    torch::Tensor attn_out = std::get<0>(attn_result);
+    int64_t B = x_norm.size(0);
+    int64_t S = x_norm.size(1);
     
-    // Транспонируем обратно: (seq, batch, features) -> (batch, seq, features)
-    attn_out = attn_out.transpose(0, 1);
+    auto q = q_proj_->forward(x_norm);
+    auto k = k_proj_->forward(x_norm);
+    auto v = v_proj_->forward(x_norm);
+    
+    q = q.reshape({B, S, nhead_, head_dim_}).transpose(1, 2);
+    k = k.reshape({B, S, nhead_, head_dim_}).transpose(1, 2);
+    v = v.reshape({B, S, nhead_, head_dim_}).transpose(1, 2);
+    
+    double dropout_p = dropout1_->is_training() ? 0.1 : 0.0;
+    
+    torch::Tensor attn_out;
+    if (padding_mask.defined()) {
+        // padding_mask: (B, S) bool — true где padding
+        // Для attention: расширяем до (B, 1, 1, S)
+        auto mask = padding_mask.unsqueeze(1).unsqueeze(1);
+        attn_out = torch::scaled_dot_product_attention(q, k, v, mask, dropout_p);
+    } else {
+        attn_out = torch::scaled_dot_product_attention(q, k, v, {}, dropout_p);
+    }
+    
+    attn_out = attn_out.transpose(1, 2).reshape({B, S, d_model_});
+    attn_out = o_proj_->forward(attn_out);
     
     x = residual + dropout1_->forward(attn_out);
 
-    // Pre-LN: FFN (Perceptron)
+    // Pre-LN: FFN
     residual = x;
     x_norm = norm2_->forward(x);
     x = residual + dropout2_->forward(ffn_->forward(x_norm));

@@ -4,34 +4,41 @@
 
 Perceptron::Perceptron(std::vector<int64_t> sizes)
 {
-    device_ = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+    auto device = torch::cuda::is_available()
+        ? torch::Device(torch::kCUDA)
+        : torch::Device(torch::kCPU);
 
     layers_ = register_module("layers", torch::nn::Sequential());
     for (size_t i = 0; i < sizes.size() - 1; ++i) {
         layers_->push_back(torch::nn::Linear(sizes[i], sizes[i + 1]));
-        if (i < sizes.size() - 2) layers_->push_back(torch::nn::ReLU());
+        if (i < sizes.size() - 2) layers_->push_back(torch::nn::GELU());
     }
-    
-    // Перемещаем ВСЁ на GPU сразу после регистрации
-    this->to(device_);
+
+    this->to(device);
 }
 
 
 torch::Tensor Perceptron::forward(torch::Tensor x)
 {
-    // Проверяем, что тензор на правильном устройстве
-    if (x.device() != device_) {
-        x = x.to(device_);
-    }
+    auto device = parameters().front().device();
+
+    TORCH_CHECK(
+        x.device() == device,
+        "Perceptron::forward(): expected input on ",
+        device,
+        ", got ",
+        x.device());
+
     return layers_->forward(x);
 }
 
 
 void Perceptron::fit(torch::Tensor inputs, torch::Tensor targets, int epochs, int batch, double lr)
 {
-    // Перемещаем данные на GPU один раз
-    inputs = inputs.to(device_);
-    targets = targets.to(device_);
+    auto device = parameters().front().device();
+
+    inputs = inputs.to(device);
+    targets = targets.to(device);
 
     // Оптимизатор и функция потерь автоматически будут на GPU,
     // так как parameters() уже на GPU
@@ -43,7 +50,7 @@ void Perceptron::fit(torch::Tensor inputs, torch::Tensor targets, int epochs, in
     for (int e = 0; e < epochs; ++e) {
         float loss_sum = 0;
         int n = 0;
-        auto idx = torch::randperm(inputs.size(0), device_);
+        auto idx = torch::randperm(inputs.size(0), device);
 
         for (int i = 0; i < inputs.size(0); i += batch) {
             int end = std::min(i + batch, static_cast<int>(inputs.size(0)));
@@ -68,13 +75,17 @@ torch::Tensor Perceptron::predict(torch::Tensor x)
 {
     this->eval();
     torch::NoGradGuard g;
-    
-    // Перемещаем вход на GPU если нужно
-    if (x.device() != device_) {
-        x = x.to(device_);
-    }
-    
-    auto output = this->forward(x);
-    return output.argmax(1).to(torch::kCPU);
+
+    auto device = parameters().front().device();
+
+    TORCH_CHECK(
+        x.device() == device,
+        "Perceptron::predict(): expected input on ",
+        device,
+        ", got ",
+        x.device());
+
+    auto output = forward(x);
+    return output.argmax(1).cpu();
 }
 

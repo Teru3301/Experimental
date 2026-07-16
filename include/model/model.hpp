@@ -11,21 +11,15 @@
 
 class TransformerModel : public torch::nn::Module
 {
-    // Embeddings
     torch::nn::Embedding token_embedding_{nullptr};
     torch::nn::Dropout embed_dropout_{nullptr};
     
-    // Encoder
     std::vector<std::shared_ptr<TransformerEncoderBlock>> encoder_blocks_;
-    
-    // Decoder
     std::vector<std::shared_ptr<TransformerDecoderBlock>> decoder_blocks_;
     
-    // Output
     torch::nn::Linear output_proj_{nullptr};
     torch::nn::LayerNorm final_norm_{nullptr};
     
-    // Config
     int64_t d_model_;
     int64_t vocab_size_;
     int64_t nhead_;
@@ -33,7 +27,6 @@ class TransformerModel : public torch::nn::Module
     double rope_theta_{10000.0};
     torch::Device device_{torch::kCPU};
     
-    // RoPE: предвычисляем cos/sin до 32K (можно расширить динамически)
     torch::Tensor rope_cos_{};
     torch::Tensor rope_sin_{};
     
@@ -51,6 +44,9 @@ public:
     torch::Tensor encode(torch::Tensor src_ids, torch::Tensor src_padding_mask = {});
     torch::Tensor decode(torch::Tensor tgt_ids, torch::Tensor encoder_out,
                          torch::Tensor tgt_padding_mask = {});
+    
+    // Генерация с KV-cache
+    torch::Tensor generate(torch::Tensor src_ids, int64_t max_len, int64_t bos_token = 1);
     
     torch::Device device() const { return device_; }
 };
